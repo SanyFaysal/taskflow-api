@@ -1,0 +1,28 @@
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { AuthenticatedUser } from '../interfaces/authenticated-user.interface';
+
+/**
+ * Custom parameter decorator to extract the authenticated user from the request object.
+ * Can extract the full user object or a specific property (e.g. `@CurrentUser('id') userId: string`).
+ * 
+ * Example:
+ * ```ts
+ * @Get('profile')
+ * getProfile(@CurrentUser() user: AuthenticatedUser) {
+ *   return user;
+ * }
+ * ```
+ */
+export const CurrentUser = createParamDecorator(
+  (data: keyof AuthenticatedUser | undefined, ctx: ExecutionContext) => {
+    const request = ctx.switchToHttp().getRequest();
+    const user = request.user as AuthenticatedUser;
+
+    if (!user) {
+      return null;
+    }
+
+    return data ? user[data] : user;
+  },
+);
+
