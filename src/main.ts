@@ -77,11 +77,9 @@ async function bootstrap() {
 
   await app.listen(port);
 
-  logger.log(`========================================================`);
   logger.log(`🚀 ${appName} is successfully running!`);
-  logger.log(`📡 Base API URL:      http://localhost:${port}/${apiPrefix}`);
-  logger.log(`📚 Swagger OpenAPI:   http://localhost:${port}/api/docs`);
-  logger.log(`========================================================`);
+  logger.log(`📡 Base API URL: http://localhost:${port}/${apiPrefix}`);
+  logger.log(`📚 Swagger OpenAPI: http://localhost:${port}/api/docs`);
 }
 
 bootstrap();
