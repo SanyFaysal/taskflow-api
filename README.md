@@ -1,7 +1,7 @@
 # 🎓 TaskFlow Core API: Enterprise Architecture & In-Depth Study Guide
 
  **A production-ready NestJS + PostgreSQL codebase crafted as a masterclass curriculum.**
-👉 **For the comprehensive line-by-line, flow-by-flow textbook guide, read: [LEARNING_GUIDE.md](file:///c:/Projects/Self/Learning/nest-projects/taskflow-api/LEARNING_GUIDE.md)**
+👉 **For the comprehensive line-by-line, flow-by-flow textbook guide,  read: [LEARNING_GUIDE.md](https://github.com/SanyFaysal/taskflow-api/blob/main/LEARNING_GUIDE.md) **
 
 ---
 
