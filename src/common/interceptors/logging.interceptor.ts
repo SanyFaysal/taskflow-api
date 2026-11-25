@@ -18,24 +18,25 @@ export class LoggingInterceptor implements NestInterceptor {
     const { method, originalUrl } = request;
     const now = Date.now();
 
-    return next.handle().pipe(
-      tap({
-        next: () => {
-          const response = context.switchToHttp().getResponse();
-          const statusCode = response.statusCode;
-          const delay = Date.now() - now;
-          this.logger.log(
-            `[${method}] ${originalUrl} ${statusCode} +${delay}ms`,
-          );
-        },
-        error: (err) => {
-          const delay = Date.now() - now;
-          this.logger.error(
-            `[${method}] ${originalUrl} FAILED +${delay}ms - ${err.message}`,
-          );
-        },
-      }),
-    );
+    return next.handle()   // ◄── next.handle() = "baki chain ta chalao" (Express-er next() er moto)
+      .pipe(
+        tap({    //<-- tap: shudhu dekhe, bodlay na. ejonnoi login tab use kore 
+          next: () => {    // ◄── PORE run hoy (controller successfully return korle)
+            const response = context.switchToHttp().getResponse();
+            const statusCode = response.statusCode;
+            const delay = Date.now() - now;
+            this.logger.log(
+              `[${method}] ${originalUrl} ${statusCode} +${delay}ms`,
+            );
+          },
+          error: (err) => {    // ◄── PORE run hoy (controller throw korle)
+            const delay = Date.now() - now;
+            this.logger.error(
+              `[${method}] ${originalUrl} FAILED +${delay}ms - ${err.message}`,
+            );
+          },
+        }),
+      );
   }
 }
 

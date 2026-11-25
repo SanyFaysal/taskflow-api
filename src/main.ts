@@ -1,17 +1,18 @@
 import { NestFactory } from '@nestjs/core';
-import { Logger, ValidationPipe } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Logger } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import appConfig from './config/app.config';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
 
-  const configService = app.get(ConfigService);
-  const port = configService.get<number>('app.port', 3000);
-  const apiPrefix = configService.get<string>('app.apiPrefix', 'api/v1');
-  const appName = configService.get<string>('app.appName', 'TaskFlow Core API');
+  // Typed config: `config.port` is a number, and a typo is a compile error.
+  // Compare: configService.get<number>('app.prot') compiles and returns undefined.
+  const config = app.get<ConfigType<typeof appConfig>>(appConfig.KEY);
+  const { port, apiPrefix, appName, swaggerEnabled, swaggerPath } = config;
 
   // Enable CORS
   app.enableCors({
@@ -26,19 +27,27 @@ async function bootstrap() {
   // Set Global Routing Prefix (e.g. /api/v1)
   app.setGlobalPrefix(apiPrefix);
 
-  // Global Input Validation & Transformation Pipe
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
-    }),
-  );
+  // ValidationPipe is registered in AppModule via APP_PIPE.
 
-  // Swagger OpenAPI Documentation
+  // Swagger OpenAPI Documentation (off unless SWAGGER_ENABLED=true)
+  if (swaggerEnabled) {
+    setupSwagger(app, appName, swaggerPath);
+  }
+
+  await app.listen(port);
+
+  logger.log(`🚀 ${appName} is running (${config.nodeEnv})`);
+  logger.log(`📡 Base API URL: http://localhost:${port}/${apiPrefix}`);
+  if (swaggerEnabled) {
+    logger.log(`📚 Swagger OpenAPI: http://localhost:${port}/${swaggerPath}`);
+  }
+}
+
+function setupSwagger(
+  app: Awaited<ReturnType<typeof NestFactory.create>>,
+  appName: string,
+  swaggerPath: string,
+) {
   const swaggerConfig = new DocumentBuilder()
     .setTitle(appName)
     .setDescription(
@@ -67,19 +76,13 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document, {
+  SwaggerModule.setup(swaggerPath, app, document, {
     swaggerOptions: {
       persistAuthorization: true,
       tagsSorter: 'alpha',
       operationsSorter: 'alpha',
     },
   });
-
-  await app.listen(port);
-
-  logger.log(`🚀 ${appName} is successfully running!`);
-  logger.log(`📡 Base API URL: http://localhost:${port}/${apiPrefix}`);
-  logger.log(`📚 Swagger OpenAPI: http://localhost:${port}/api/docs`);
 }
 
 bootstrap();

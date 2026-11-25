@@ -1,10 +1,11 @@
-import { Module } from '@nestjs/common';
+import { Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
+import { validateEnv } from './config/env.validation';
 
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -26,6 +27,8 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
       isGlobal: true,
       load: [appConfig, databaseConfig, jwtConfig],
       envFilePath: ['.env'],
+      validate: validateEnv, // fail fast at startup if .env is wrong
+      cache: true, // read process.env once, not on every get()
     }),
 
     // Database Integration (PostgreSQL with TypeORM)
@@ -39,6 +42,18 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     TasksModule,
   ],
   providers: [
+    // Global Input Validation & Transformation Pipe.
+    // Registered here (not in main.ts) so it also applies in e2e tests
+    // that build the app from AppModule without running main.ts.
+    {
+      provide: APP_PIPE,
+      useValue: new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+        transformOptions: { enableImplicitConversion: true },
+      }),
+    },
     // Global Authentication Guard (JWT by default, opt out with @Public())
     {
       provide: APP_GUARD,

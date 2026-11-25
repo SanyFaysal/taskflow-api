@@ -15,24 +15,20 @@ export interface ResponseEnvelope<T> {
 }
 
 @Injectable()
-export class TransformInterceptor<T>
-  implements NestInterceptor<T, ResponseEnvelope<T>>
-{
-  intercept(
-    context: ExecutionContext,
-    next: CallHandler,
-  ): Observable<ResponseEnvelope<T>> {
+export class TransformInterceptor<T> implements NestInterceptor<T, ResponseEnvelope<T>> {
+  intercept(context: ExecutionContext, next: CallHandler,): Observable<ResponseEnvelope<T>> {
     const response = context.switchToHttp().getResponse();
     const statusCode = response.statusCode;
 
-    return next.handle().pipe(
-      map((data) => ({
-        success: true,
-        statusCode,
-        data,
-        timestamp: new Date().toISOString(),
-      })),
-    );
+    return next.handle() // ◄── next.handle() = "baki chain ta chalao" (Express-er next() er moto)
+      .pipe(
+        map((data) => ({   //<-- map: shudhu dekhe, bodlay na. ejonnoi login tab use kore 
+          success: true,
+          statusCode,
+          data,
+          timestamp: new Date().toISOString(),
+        })),
+      );
   }
 }
 
